@@ -1,0 +1,32 @@
+<html>
+    <head>
+    <title>Spotify Playlist analyzer</title>
+    <link rel="stylesheet" href="styles/main.css">
+    </head>
+    
+    <body>
+        <h1>Spotify Playlist Analyzer</h1>
+        
+        <p>{{{ message }}}</p>
+
+        <form action="http://localhost:3000/search" method="post">
+            <div id="form">
+                <input type="text" name="search" id="searchfield" placeholder="HTTP address to playlist"></input>
+                
+            </div>
+        </form>
+
+        <p>
+            {{data}}
+        </p>
+        <ul>
+        {{#data.items}}
+          <li>{{track.artists.name}} - {{track.name}} </li>
+
+        {{/data.items}}
+        </ul>
+        <p>{{data.owner.display_name}}</p>
+        <p>{{data.name}}</p>
+    </body>
+    
+</html>

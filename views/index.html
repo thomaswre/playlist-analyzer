@@ -16,16 +16,14 @@
             </div>
         </form>
 
-        <p>
-            {{data}}
-        </p>
+        
         <ul>
         {{#data.items}}
-          <li>{{track.artists.name}} - {{track.name}} </li>
+          <li>{{track.artists.0.name}} - {{track.name}} - {{track.popularity}} </li>
 
         {{/data.items}}
         </ul>
-        <p>{{data.owner.display_name}}</p>
+        <p>{{data.owner.id}}</p>
         <p>{{data.name}}</p>
     </body>
     

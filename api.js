@@ -1,31 +1,32 @@
+'use strict';
+// Settings and Confs
 const express = require('express');
-var request = require('request'); // "Request" library
+const request = require('request'); 
 const axios = require('axios').default;
 const { AuthorizationCode } = require('simple-oauth2');
-const app = express();
-
 const mustacheExpress = require('mustache-express');
 
-const callbackURL = 'http://localhost:3000/callback';
+const app = express();
 
+// Serve static files in Express
 app.use(express.static('public'));
+
 app.engine('html', mustacheExpress());
 app.set('view engine', 'html');
+app.set('views', __dirname + '/views');
+
 const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
 app.use(cookieParser());
 app.use(bodyParser.urlencoded({ extended: false }));
 
-// Serve static files in Express
 
+const credentials = require('./credentials'); //  File with Spotify API account details
 
+// Callback URL, change depending on local dev or domain hosted.
+const callbackURL = 'http://localhost:3000/callback';
 
-const credentials = require('./credentials'); // Requires the credentials.js file with Spotify API account details
-
-
-//console.log(credentials);
-
-
+// Auth
 const oauth2 = new AuthorizationCode(credentials);
 
 const authorizationUri = oauth2.authorizeURL({
@@ -33,20 +34,12 @@ const authorizationUri = oauth2.authorizeURL({
   scope: 'user-read-private user-read-email',
   state: '3(#0/!~',
 });
-
   
-
-// console.log('Redirecting to authorizingURI: ' + authorizationUri);
-// res.redirect(authorizationUri);
-  
-
-
-
 // Initial page redirecting to Spotify
 app.get('/auth', (req, res) => {
   
-  console.log('/auth');
-  // console.log(authorizationUri);
+  console.log('/auth'); // Could use a middleware to console.log each route 
+  
   res.redirect(authorizationUri);
 });
 
@@ -54,7 +47,7 @@ app.get('/auth', (req, res) => {
 app.get('/callback', async (req, res) => {
   const code = req.query.code;
 
-  // TODO: Change localhost to actual domain when putting api into production
+  
   const options = {
     code,
     redirect_uri: callbackURL
@@ -71,8 +64,6 @@ app.get('/callback', async (req, res) => {
 
   app.locals.token = accessToken;
 
-  //console.log('AccessToken is expired?')
- 	//console.log(accessToken.expired());
  	return res.status(200).cookie('auth', accessToken, {httpOnly: true}).redirect('/');
   
  	
@@ -86,10 +77,6 @@ app.get('/callback', async (req, res) => {
 
 });
 
-app.get('/success', (req, res) => {
-
-  res.send('');
-});
 
 app.post('/search', (req, res) => {
 
@@ -123,16 +110,14 @@ app.post('/search', (req, res) => {
           json: true
         };
 
-        request.get(searchOptions, function(error, response, body) {
+        axios(searchOptions)
+          .then(response => {
+            console.log(response);
+            res.render('index', {data: response.data});
+          })
+          .catch(error => console.error('axios error'));
 
-          // Just some test prints to the console
-          for (i=0; i < body.items.length; i++ ) {
-            console.log(body.items[i].track.name);
-
-          }
-          
-          res.render('index.html', {data: body})
-        });
+        
 
 
 
@@ -143,11 +128,6 @@ app.post('/search', (req, res) => {
 		res.status(403).send('Not authenticated. Try <a href="/auth">logging in</a>');
 	}
 
-});
-
-app.get('/refresh', function(req, res) {
-  let testtoken = req.cookies.auth;
-  
 });
 
 // Used to manually clear cookie for session testing

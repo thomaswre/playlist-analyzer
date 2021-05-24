@@ -121,6 +121,7 @@ app.post('/search', cors(), (req, res) => {
 	let playlistID = playlistUrl.replace(/:/g, '/').replace(/.*playlist\//, '')
       	.replace(/\?.*/, '');
   
+  let trackIDs = '';
 
   console.log("playlistID: " + playlistID);
 	
@@ -136,19 +137,97 @@ app.post('/search', cors(), (req, res) => {
 
     console.log(Object.keys(tokenobj.token));
 
+    let trackIDs = [];
+
 		var searchOptions = {
-          url: 'https://api.spotify.com/v1/playlists/' + playlistID + '/tracks',
           headers: { 'Authorization': 'Bearer ' + tokenobj.token.access_token},
           json: true
         };
+    
+    let AudiofeatConf = {
+      url: 'https://api.spotify.com/v1/audio-features?ids=' + trackIDs,
+      headers: { 'Authorization': 'Bearer ' + tokenobj.token.access_token},
+      json: true
+    };
 
-        axios(searchOptions)
-          .then(response => {
-            console.log(response.data.items);
-            res.send(response.data.items);
+    // Makes two Axios Get requests, combine the two requests, send them as the response
+
+    let getTracks = async () => {
+      let response;
+      try {
+        response = await axios('https://api.spotify.com/v1/playlists/' + playlistID + '/tracks', searchOptions);
+      } catch(error) {
+
+        console.log('Failed to get Playlist Tracks: ' + error);
+      }
+      
+        
+        // Retrieve every track ID from playlist and add to TrackIDs 
+      response.data.items.forEach(track => { // Max 100 tracks, use slice to cut longer playlists?
+        console.log("trackID: " + track.track.id);
+        trackIDs.push(track.track.id);
+
+      });
+      let response2;
+      try {
+        response2 = await axios('https://api.spotify.com/v1/audio-features?ids=' + trackIDs.join(), AudiofeatConf);
+      } catch(error) {
+        console.log('Failed to get Audio Features: ' + error);
+      }
+      
+      console.log(response.data.items);
+      console.log(response2.data);
+
+      console.log('THIS IS WHERE THE OBJECTS COME TOGETHER');
+      let newresp = response.data.items;
+
+      for(let i = 0; i < newresp.length; i++) {
+        newresp[i].features = response2.data.audio_features[i];
+
+        
+      }
+      
+
+      console.log(newresp);
+      
+      res.send(newresp);
+
+    }
+    getTracks();
+    
+
+        // Makes two axios Get requests, one inside the other
+        /*
+        axios('https://api.spotify.com/v1/playlists/' + playlistID + '/tracks', searchOptions)
+          .then(responseTracks => {
+            
+            // Retrieve every track ID from playlist and add to TrackIDs 
+            responseTracks.data.items.forEach(track => { // Max 100 tracks, use slice to cut longer playlists?
+              console.log("trackID: " + track.track.id);
+              trackIDs.push(track.track.id);
+
+            });
+
+            console.log('TrackID joined string: ' + trackIDs.join());
+            axios('https://api.spotify.com/v1/audio-features?ids=' + trackIDs.join(), AudiofeatConf)
+            .then(responseFeature => {
+              console.log(responseFeature.data);
+
+            })
+            .catch(error => console.error('Axios Audio Feature error: ' + error));
+
+            console.log(responseTracks.data.items);
+
+            console.log('THIS IS WHERE THE OBJECTS COME TOGETHER');
+            // Object.assign(responseTracks.data.items, responseFeature);
+            
+            
+            //console.log(response);
+            
+            res.send(responseTracks.data.items);
           })
-          .catch(error => console.error('axios error:' + error));
-
+          .catch(error => console.error('Get Playlist Tracks error:' + error));
+          */
         
 
 

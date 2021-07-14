@@ -25,8 +25,7 @@ app.options('/search', cors());
 
 const credentials = require('./credentials'); //  File with Spotify API account details
 
-// A demo object of a spotify playlist, for testing.
-const plDemo = require('./pl-demo.js');
+
 
 // Callback URL, change depending on local dev or domain hosted.
 const callbackURL = 'http://localhost:3000/callback';
@@ -196,42 +195,6 @@ app.post('/search', cors(), (req, res) => {
     getTracks();
     
 
-        // Makes two axios Get requests, one inside the other
-        /*
-        axios('https://api.spotify.com/v1/playlists/' + playlistID + '/tracks', searchOptions)
-          .then(responseTracks => {
-            
-            // Retrieve every track ID from playlist and add to TrackIDs 
-            responseTracks.data.items.forEach(track => { // Max 100 tracks, use slice to cut longer playlists?
-              console.log("trackID: " + track.track.id);
-              trackIDs.push(track.track.id);
-
-            });
-
-            console.log('TrackID joined string: ' + trackIDs.join());
-            axios('https://api.spotify.com/v1/audio-features?ids=' + trackIDs.join(), AudiofeatConf)
-            .then(responseFeature => {
-              console.log(responseFeature.data);
-
-            })
-            .catch(error => console.error('Axios Audio Feature error: ' + error));
-
-            console.log(responseTracks.data.items);
-
-            console.log('THIS IS WHERE THE OBJECTS COME TOGETHER');
-            // Object.assign(responseTracks.data.items, responseFeature);
-            
-            
-            //console.log(response);
-            
-            res.send(responseTracks.data.items);
-          })
-          .catch(error => console.error('Get Playlist Tracks error:' + error));
-          */
-        
-
-
-
 	}
   // If token has expired. TODO: Refresh it.
 	else {
@@ -249,13 +212,11 @@ app.get('/clear_cookie', function(req, res){
 
 app.get('/', (req, res) => {
 
-  // let tokenobj = app.locals.token;
-  // console.log(tokenobj);
 
 	if (typeof tokenobj === 'undefined') {
 
 
-		// console.log("req.cookies.auth", req.cookies.auth);
+		
 		
     res.send({message: 'Not authenticated. Try <a href="/auth">logging in</a>'})
 	}

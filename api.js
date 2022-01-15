@@ -1,17 +1,15 @@
 'use strict';
 // Settings and Confs
 const express = require('express');
+
+const PORT = process.env.PORT || 3000;
  
 const axios = require('axios').default;
 
 const cors = require('cors');
 const { AuthorizationCode } = require('simple-oauth2');
 
-
 const app = express();
-
-// Serve static files in Express
-app.use(express.static('public'));
 
 const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
@@ -24,8 +22,6 @@ app.use(express.json());
 app.options('/search', cors());
 
 const credentials = require('./credentials'); //  File with Spotify API account details
-
-
 
 // Callback URL, change depending on local dev or domain hosted.
 const callbackURL = 'http://localhost:3000/callback';
@@ -69,8 +65,6 @@ app.get('/callback', async (req, res) => {
 
   app.locals.token = accessToken;
 
-  // TODO: Make the redirect work properly, carry the token or whatever
-
   // Sets a cookie with the name "auth" with the token
   res.cookie('auth', accessToken, {httpOnly: true});
   console.log('req.cookies.auth: ' + JSON.stringify(req.cookies.auth));
@@ -82,17 +76,18 @@ app.get('/callback', async (req, res) => {
    console.log('Access Token Error', error.message);
    return res.status(500.).send({message: 'Cannot obtain access token to Spotify'});
    
- 	 
  }
-
 
 });
 
-
 app.post('/search', cors(), (req, res) => {
 
-  
   let origin = req.headers.origin;
+  console.log('Origin: ' + origin);
+
+  // What server am I coming from. Used to set correct links to backend Auth
+  let host = req.headers.host;
+  console.log('Host: ' + host);
   
   console.log("req.headers.origin: " + origin);
 
@@ -106,7 +101,7 @@ app.post('/search', cors(), (req, res) => {
 
   if (!tokenobj) {
     console.log("Token false or null, sending noauth");
-    return res.send({noauth: 'Not authenticated. Try <a href="http://localhost:3000/auth">logging in</a>'});
+    return res.send({noauth: 'Not authenticated. Try <a href="http://' + host + '/auth">logging in</a>'});
   }
   
   // If token expired at the top. No search before token is approved and not undefined.
@@ -127,7 +122,7 @@ app.post('/search', cors(), (req, res) => {
   console.log('search: is the token expired?');
   console.log(tokenobj.expired());
 
-  // If active token, do the search
+  // If token not expired, do the search
 
 	if (!tokenobj.expired()) { 
 
@@ -174,8 +169,12 @@ app.post('/search', cors(), (req, res) => {
         console.log('Failed to get Audio Features: ' + error);
       }
       
+      // Prints out the datastructure of the response items
+      /*
       console.log(response.data.items);
+
       console.log(response2.data);
+      */
 
       console.log('THIS IS WHERE THE OBJECTS COME TOGETHER');
       let newresp = response.data.items;
@@ -186,8 +185,8 @@ app.post('/search', cors(), (req, res) => {
         
       }
       
-
-      console.log(newresp);
+      
+      //console.log(newresp);
       
       res.send(newresp);
 
@@ -199,7 +198,7 @@ app.post('/search', cors(), (req, res) => {
   // If token has expired. TODO: Refresh it.
 	else {
 
-		res.status(403).send({noauth: 'Access token has expired. Try <a href="/auth">logging in</a>'});
+		return res.send({noauth: 'Access token has expired. Try getting a new one by <a href="/auth">logging in</a> '});
 	}
 
 });
@@ -210,23 +209,20 @@ app.get('/clear_cookie', function(req, res){
    res.send('cookie: auth cleared');
 });
 
+
 app.get('/', (req, res) => {
-
-
+  
 	if (typeof tokenobj === 'undefined') {
-
-
 		
-		
-    res.send({message: 'Not authenticated. Try <a href="/auth">logging in</a>'})
+    res.send({noauth: 'Not authenticated. Try <a href="/auth">logging in</a>'})
 	}
 	else {
-		res.send({message: 'Heeeellooooooo auth!'});
+		res.send({noauth: 'Heeeellooooooo auth!'});
 	}
 
 });
 
-app.listen(3000, () => {
-  console.log('Express server started on port 3000'); // eslint-disable-line
+app.listen(PORT, () => {
+  console.log('Express server started on port ' + PORT); // eslint-disable-line
 });
 

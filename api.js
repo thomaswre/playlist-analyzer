@@ -82,6 +82,7 @@ app.get('/callback', async (req, res) => {
 
 app.post('/search', cors(), (req, res) => {
 
+  // Frontend URL
   let origin = req.headers.origin;
   console.log('Origin: ' + origin);
 
@@ -96,16 +97,17 @@ app.post('/search', cors(), (req, res) => {
   console.log(JSON.stringify(token));
 
   let tokenobj = app.locals.token;
-  console.log('tokenobj in search: ');
-  console.log(JSON.stringify(tokenobj));
+  // console.log('tokenobj in search: ');
+  // console.log(JSON.stringify(tokenobj));
 
   if (!tokenobj) {
     console.log("Token false or null, sending noauth");
     return res.send({noauth: 'Not authenticated. Try <a href="http://' + host + '/auth">logging in</a>'});
   }
   
-  // If token expired at the top. No search before token is approved and not undefined.
+  // TODO: If token expired at the top. No search before token is approved and not undefined.
   // If expired, make a token.refresh and make sure cookie auth is updated.
+
   console.log("Logged in.");
   
 	let playlistUrl = req.body.search;
@@ -126,10 +128,10 @@ app.post('/search', cors(), (req, res) => {
 
 	if (!tokenobj.expired()) { 
 
-    console.log('access_token in search');
-		console.log(tokenobj.token.access_token);
+    // console.log('access_token in search');
+		// console.log(tokenobj.token.access_token);
 
-    console.log(Object.keys(tokenobj.token));
+    // console.log(Object.keys(tokenobj.token));
 
     let trackIDs = [];
 
@@ -153,6 +155,7 @@ app.post('/search', cors(), (req, res) => {
       } catch(error) {
 
         console.log('Failed to get Playlist Tracks: ' + error);
+        return res.send({failed: 'Failed to get Playlist tracks. Incorrect playlist URL?'});
       }
       
         
@@ -176,17 +179,13 @@ app.post('/search', cors(), (req, res) => {
       console.log(response2.data);
       */
 
-      console.log('THIS IS WHERE THE OBJECTS COME TOGETHER');
+      // Combines the audio features into every single track on the playlist
       let newresp = response.data.items;
 
       for(let i = 0; i < newresp.length; i++) {
         newresp[i].features = response2.data.audio_features[i];
-
-        
+ 
       }
-      
-      
-      //console.log(newresp);
       
       res.send(newresp);
 
@@ -195,10 +194,10 @@ app.post('/search', cors(), (req, res) => {
     
 
 	}
-  // If token has expired. TODO: Refresh it.
+  // If token has expired. Send link to re-authenticate. Could have refreshed it, but meh.
 	else {
-
-		return res.send({noauth: 'Access token has expired. Try getting a new one by <a href="/auth">logging in</a> '});
+    console.log('Token expired. Sending login');
+		res.send({noauth: 'Access token has expired. Try <a href="http://' + host + '/auth">logging in</a>'});
 	}
 
 });

@@ -4,7 +4,7 @@ module.exports = {
         secret: ''
       },
       auth: {
-        tokenHost: 'htps://accounts.spotify.com',
+        tokenHost: 'https://accounts.spotify.com',
         tokenPath: '/api/token',
         authorizePath: '/authorize'
       }

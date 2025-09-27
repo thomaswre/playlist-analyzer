@@ -12,9 +12,9 @@ const { AuthorizationCode } = require('simple-oauth2');
 const app = express();
 
 const cookieParser = require('cookie-parser');
-const bodyParser = require('body-parser');
+
 app.use(cookieParser());
-app.use(bodyParser.urlencoded({ extended: false }));
+app.use(express.urlencoded({ extended: false }));
 
 app.use(express.json());
 
@@ -74,7 +74,7 @@ app.get('/callback', async (req, res) => {
  	
  } catch (error) {
    console.log('Access Token Error', error.message);
-   return res.status(500.).send({message: 'Cannot obtain access token to Spotify'});
+   return res.status(500).send({message: 'Cannot obtain access token to Spotify'});
    
  }
 
@@ -166,11 +166,11 @@ app.post('/search', cors(), (req, res) => {
 
       });
       let response2;
-      try {
+      /* try {
         response2 = await axios('https://api.spotify.com/v1/audio-features?ids=' + trackIDs.join(), AudiofeatConf);
       } catch(error) {
         console.log('Failed to get Audio Features: ' + error);
-      }
+      } */
       
       // Prints out the datastructure of the response items
       /*
@@ -180,10 +180,13 @@ app.post('/search', cors(), (req, res) => {
       */
 
       // Combines the audio features into every single track on the playlist
+      // Audio features are deprecated and not working
       let newresp = response.data.items;
+  
+
 
       for(let i = 0; i < newresp.length; i++) {
-        newresp[i].features = response2.data.audio_features[i];
+        newresp[i].features = [];
  
       }
       
